@@ -49,14 +49,14 @@ matrix:
       env: DJANGO="Django==1.6.5" DB=mysql
     - python: "3.3"
       env: DJANGO="Django==1.6.5" DB=mysql
-    - python: "3.3"
+    - python: "3.4"
       env: DJANGO="Django==1.6.5" DB=mysql
 
     - python: "3.2"
       env: DJANGO="git+https://github.com/django/django.git@stable/1.7.x#egg=django" DB=mysql
     - python: "3.3"
       env: DJANGO="git+https://github.com/django/django.git@stable/1.7.x#egg=django" DB=mysql
-    - python: "3.3"
+    - python: "3.4"
       env: DJANGO="git+https://github.com/django/django.git@stable/1.7.x#egg=django" DB=mysql
 before_script:
   - mysql -e 'create database pybbm;'
