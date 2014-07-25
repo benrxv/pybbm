@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 import os
 import re
 import uuid
-from django.utils.encoding import force_bytes
 from django.utils.translation import ugettext as _
 from pybb.compat import get_username_field, get_user_model
 
