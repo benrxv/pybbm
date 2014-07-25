@@ -27,7 +27,9 @@ The following dependencies are optional. You can install them with ``pip install
   PyBBM by default uses ``sorl.thumbnail`` if it is installed and included in your ``INSTALLED_APPS`` setting.
   It is used for defining the `avatar` field in the `PybbProfile` model and for resizing the avatar in the ``pybb/avatar.html`` template.
 
-* ``PIL`` (Python Imaging Library) or its more up-to-date fork ``Pillow`` is optional if you configure ``sorl.thumbnail`` to use different backend or don't use ``sorl.thumbnail`` in general, but remember that using an ImageField in forms requires the Python Imaging Library to be installed (i.e. you should install it if you use the built-in profile).
+* ``PIL`` (Python Imaging Library) or its more up-to-date fork ``Pillow`` is optional if you configure ``sorl.thumbnail``
+  to use different backend or don't use ``sorl.thumbnail`` in general, but remember that using an ImageField in forms
+  requires the Python Imaging Library to be installed (i.e. you should install it if you use the built-in profile).
 
 * PyBBM emulates the behavior and functionality of ``django-pure-pagination``, but we recommend to install it in your
   project.
