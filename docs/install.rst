@@ -101,20 +101,37 @@ For more information see :doc:`how to use custom user model with pybbm</customus
 Sync/Migrate database
 ---------------------
 
-If you are installing pybbm for the first time and have south installed, run::
+Since django 1.7 release you have several combinations of installed packages that affect database migrations:
+
+* **django >= 1.7, south not installed**
+  Django since 1.7 version has it's own `migration engine <https://docs.djangoproject.com/en/1.7/topics/migrations/>`_.
+  Pybbm fully supports django 1.7 migrations, so just run::
+
+    python manage.py migrate pybb
+
+* **django < 1.7, south >= 1.0**
+  South since version 1.0 changed default migration directory to `south_migrations`.
+  This give reusable apps ability to support django native migrations and south migrations in parallel.
+  Migration commands that you need::
 
     python manage.py syncdb --all
     python manage.py migrate pybb --fake
 
-or just::
+* **django < 1.7, south < 1.0**
+  Override `SOUTH_MIGRATION_MODULES` setting as::
 
-    python manage.py syncdb
+    SOUTH_MIGRATION_MODULES = {
+        'pybb': 'pybb.south_migrations',
+    }
 
-if south is not installed.
+  then run commands to migrate from above
 
-Run the ``migrate`` command to update pybbm or if you migrate from pybb to pybbm::
+* **django<1.7, south not installed**
+  just type::
 
-    python manage.py migrate
+    python manage.pt syncdb
+
+  to get actual database state for your pybbm release
 
 WARNING
 '''''''
