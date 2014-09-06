@@ -25,6 +25,10 @@ from pybb.permissions import perms
 from pybb.templatetags.pybb_tags import pybb_topic_poll_not_voted
 
 
+from agon_ratings.models import Rating
+from talent.models import UserProfile, Subscription
+from haystack.query import SearchQuerySet, RelatedSearchQuerySet
+
 User = compat.get_user_model()
 username_field = compat.get_username_field()
 Paginator, pure_pagination = compat.get_paginator_class()
@@ -146,6 +150,9 @@ class TopicView(RedirectToLoginMixin, PaginatorMixin, generic.ListView):
     poll_form_class = PollForm
     attachment_formset_class = AttachmentFormSet
 
+    def base_qs(self):
+        return self.topic.posts.all().select_related('user')        
+
     def get_login_redirect_url(self):
         return reverse('pybb:topic', args=(self.kwargs['pk'],))
 
@@ -201,7 +208,7 @@ class TopicView(RedirectToLoginMixin, PaginatorMixin, generic.ListView):
                 Topic.objects.filter(id=self.topic.id).update(views=F('views') +
                                                                     defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER)
                 cache.set(cache_key, 0)
-        qs = self.topic.posts.all().select_related('user')
+        qs = self.base_qs()
         if defaults.PYBB_PROFILE_RELATED_NAME:
             qs = qs.select_related('user__%s' % defaults.PYBB_PROFILE_RELATED_NAME)
         if not perms.may_moderate_topic(self.request.user, self.topic):
@@ -265,6 +272,52 @@ class TopicView(RedirectToLoginMixin, PaginatorMixin, generic.ListView):
                 TopicReadTracker.objects.filter(user=user, topic__forum=topic.forum).delete()
                 forum_mark, new = ForumReadTracker.objects.get_or_create_tracker(forum=topic.forum, user=user)
                 forum_mark.save()
+
+
+class FilteredTopicView(TopicView):
+
+    def base_qs(self):
+        rating_filter = self.request.GET.get('rating_filter', 0)
+        sub_filter = self.request.GET.getlist('sub_group')
+        sqs = SearchQuerySet().models(Post).filter(rating__gte=rating_filter, topic=self.topic.id)
+        if sub_filter:
+            sqs = sqs.filter(sub_group__in=sub_filter)
+        post_ids = [item.pk for item in sqs]
+        qs = Post.objects.filter(pk__in=post_ids)
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super(FilteredTopicView, self).get_context_data(**kwargs)
+        rating_filter = self.request.GET.get('rating_filter', 0)
+        sub_filter = [int(i) for i in self.request.GET.getlist('sub_group')]
+        ctx['rating_filter'] = int(rating_filter)
+        ctx['sub_filter'] = sub_filter
+        return ctx
+    
+
+    # def get_queryset(self):
+    #     if not perms.may_view_topic(self.request.user, self.topic):
+    #         raise PermissionDenied
+    #     if self.request.user.is_authenticated() or not defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER:
+    #         Topic.objects.filter(id=self.topic.id).update(views=F('views') + 1)
+    #     else:
+    #         cache_key = util.build_cache_key('anonymous_topic_views', topic_id=self.topic.id)
+    #         cache.add(cache_key, 0)
+    #         if cache.incr(cache_key) % defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER == 0:
+    #             Topic.objects.filter(id=self.topic.id).update(views=F('views') +
+    #                                                                 defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER)
+    #             cache.set(cache_key, 0)
+    #     sqs = SearchQuerySet().models(Post).filter(rating__gte=rating_filter, topic=self.topic.id)
+    #     if sub_filter:
+    #         sqs = sqs.filter(sub_group__in=sub_filter)
+    #     post_ids = [item.pk for item in sqs]
+    #     qs = Post.objects.filter(pk__in=post_ids)
+    #     # qs = self.topic.posts.all().select_related('user')
+    #     if defaults.PYBB_PROFILE_RELATED_NAME:
+    #         qs = qs.select_related('user__%s' % defaults.PYBB_PROFILE_RELATED_NAME)
+    #     if not perms.may_moderate_topic(self.request.user, self.topic):
+    #         qs = perms.filter_posts(self.request.user, qs)
+    #     return qs
 
 
 class PostEditMixin(object):
