@@ -293,31 +293,6 @@ class FilteredTopicView(TopicView):
         ctx['rating_filter'] = int(rating_filter)
         ctx['sub_filter'] = sub_filter
         return ctx
-    
-
-    # def get_queryset(self):
-    #     if not perms.may_view_topic(self.request.user, self.topic):
-    #         raise PermissionDenied
-    #     if self.request.user.is_authenticated() or not defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER:
-    #         Topic.objects.filter(id=self.topic.id).update(views=F('views') + 1)
-    #     else:
-    #         cache_key = util.build_cache_key('anonymous_topic_views', topic_id=self.topic.id)
-    #         cache.add(cache_key, 0)
-    #         if cache.incr(cache_key) % defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER == 0:
-    #             Topic.objects.filter(id=self.topic.id).update(views=F('views') +
-    #                                                                 defaults.PYBB_ANONYMOUS_VIEWS_CACHE_BUFFER)
-    #             cache.set(cache_key, 0)
-    #     sqs = SearchQuerySet().models(Post).filter(rating__gte=rating_filter, topic=self.topic.id)
-    #     if sub_filter:
-    #         sqs = sqs.filter(sub_group__in=sub_filter)
-    #     post_ids = [item.pk for item in sqs]
-    #     qs = Post.objects.filter(pk__in=post_ids)
-    #     # qs = self.topic.posts.all().select_related('user')
-    #     if defaults.PYBB_PROFILE_RELATED_NAME:
-    #         qs = qs.select_related('user__%s' % defaults.PYBB_PROFILE_RELATED_NAME)
-    #     if not perms.may_moderate_topic(self.request.user, self.topic):
-    #         qs = perms.filter_posts(self.request.user, qs)
-    #     return qs
 
 
 class PostEditMixin(object):
