@@ -16,6 +16,8 @@ from pybb.util import unescape, FilePathGenerator
 
 from annoying.fields import AutoOneToOneField
 
+from tinymce.models import HTMLField
+
 try:
     from south.modelsinspector import add_introspection_rules
 
@@ -223,16 +225,7 @@ class RenderableItem(models.Model):
     class Meta(object):
         abstract = True
 
-    body = models.TextField(_('Message'))
-    body_html = models.TextField(_('HTML version'))
-    body_text = models.TextField(_('Text version'))
-
-    def render(self):
-        self.body_html = defaults.PYBB_MARKUP_ENGINES[defaults.PYBB_MARKUP](self.body)
-        # Remove tags which was generated with the markup processor
-        text = strip_tags(self.body_html)
-        # Unescape entities which was generated with the markup processor
-        self.body_text = unescape(text)
+    body = HTMLField(_('Message'))
 
 
 @python_2_unicode_compatible
@@ -261,7 +254,7 @@ class Post(RenderableItem):
         created_at = tznow()
         if self.created is None:
             self.created = created_at
-        self.render()
+        # self.render()
 
         new = self.pk is None
 

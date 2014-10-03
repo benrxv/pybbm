@@ -98,7 +98,7 @@ class PostAdmin(admin.ModelAdmin):
                 }
          ),
         (_('Message'), {
-                'fields': ('body', 'body_html', 'body_text')
+                'fields': ('body',)
                 }
          ),
         )
