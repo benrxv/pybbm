@@ -42,7 +42,7 @@ class PybbProfile(models.Model):
         default=True)
     post_count = models.IntegerField(_('Post count'), blank=True, default=0)
     avatar = get_image_field_class()(_('Avatar'), blank=True, null=True,
-        upload_to=util.FilePathGenerator(to='pybb/avatar'))
+        upload_to=util.FilePathGenerator(to='devote/media/images/avatar'))
     autosubscribe = models.BooleanField(_('Automatically subscribe'),
         help_text=_('Automatically subscribe to topics that you answer'),
         default=defaults.PYBB_DEFAULT_AUTOSUBSCRIBE)
