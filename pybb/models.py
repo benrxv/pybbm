@@ -216,6 +216,16 @@ class Topic(models.Model):
         else:
             return None
 
+    def poll_answer_winning(self):
+        answers = self.poll_answers.all()
+        votes_count_list = [a.votes() for a in answers]
+        most_votes = max(votes_count_list)
+        if not votes_count_list.count(most_votes) == 1:
+            return None
+        else:
+            most_votes_index = votes_count_list.index(most_votes)
+            return answers[most_votes_index]
+
 
 class RenderableItem(models.Model):
     """

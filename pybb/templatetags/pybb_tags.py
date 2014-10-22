@@ -359,3 +359,8 @@ def if_has_tag(parser, token):
 def pybbm_calc_topic_views(topic):
     cache_key = util.build_cache_key('anonymous_topic_views', topic_id=topic.id)
     return topic.views + cache.get(cache_key, 0)
+
+
+@register.filter
+def pybb_poll_answer(user, answer):
+    return PollAnswerUser.objects.filter(poll_answer=answer, user=user)
