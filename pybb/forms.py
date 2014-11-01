@@ -12,7 +12,7 @@ from django.utils.timezone import now as tznow
 
 from pybb import compat, defaults, util
 from pybb.models import Topic, Post, Attachment, PollAnswer
-
+from devote.forms import *
 
 User = compat.get_user_model()
 username_field = compat.get_username_field()
@@ -29,6 +29,7 @@ class AttachmentForm(forms.ModelForm):
         return self.cleaned_data['file']
 
 AttachmentFormSet = inlineformset_factory(Post, Attachment, extra=1, form=AttachmentForm)
+
 
 
 class PollAnswerForm(forms.ModelForm):
@@ -49,10 +50,12 @@ class BasePollAnswerFormset(BaseInlineFormSet):
 
 
 PollAnswerFormSet = inlineformset_factory(Topic, PollAnswer, extra=2, max_num=defaults.PYBB_POLL_MAX_ANSWERS,
-                                          form=PollAnswerForm, formset=BasePollAnswerFormset)
+                                          form=PollAnswerForm, formset=BasePollAnswerFormset,
+                                          formfield_callback = add_form_control_classes)
 
 
 class PostForm(forms.ModelForm):
+
     name = forms.CharField(label=ugettext_lazy('Subject'))
     poll_type = forms.TypedChoiceField(label=ugettext_lazy('Poll type'), choices=Topic.POLL_TYPE_CHOICES, coerce=int)
     poll_question = forms.CharField(
@@ -80,8 +83,10 @@ class PostForm(forms.ModelForm):
             kwargs.setdefault('initial', {})['name'] = kwargs['instance'].topic.name
             kwargs.setdefault('initial', {})['poll_type'] = kwargs['instance'].topic.poll_type
             kwargs.setdefault('initial', {})['poll_question'] = kwargs['instance'].topic.poll_question
-
         super(PostForm, self).__init__(**kwargs)
+
+        for f in ['name', 'poll_type', 'poll_question']:
+            self.fields[f].widget.attrs['class'] = 'form-control'
 
         # remove topic specific fields
         if not (self.forum or (self.instance.pk and (self.instance.topic.head == self.instance))):
@@ -161,28 +166,29 @@ class AdminPostForm(PostForm):
     Superusers can post messages from any user and from any time
     If no user with specified name - new user will be created
     """
-    login = forms.CharField(label=ugettext_lazy('User'))
+    # login = forms.CharField(label=ugettext_lazy('User'))
 
     def __init__(self, *args, **kwargs):
-        if args:
-            kwargs.update(dict(zip(inspect.getargspec(forms.ModelForm.__init__)[0][1:], args)))
-        if 'instance' in kwargs and kwargs['instance']:
-            kwargs.setdefault('initial', {}).update({'login': getattr(kwargs['instance'].user, username_field)})
-        super(AdminPostForm, self).__init__(**kwargs)
+        super(AdminPostForm, self).__init__(*args, **kwargs)
+    #     if args:
+    #         kwargs.update(dict(zip(inspect.getargspec(forms.ModelForm.__init__)[0][1:], args)))
+    #     if 'instance' in kwargs and kwargs['instance']:
+    #         kwargs.setdefault('initial', {}).update({'login': getattr(kwargs['instance'].user, username_field)})
+    #     super(AdminPostForm, self).__init__(**kwargs)
 
-    def save(self, *args, **kwargs):
-        try:
-            self.user = User.objects.filter(**{username_field: self.cleaned_data['login']}).get()
-        except User.DoesNotExist:
-            if username_field != 'email':
-                create_data = {username_field: self.cleaned_data['login'],
-                               'email': '%s@example.com' % self.cleaned_data['login'],
-                               'is_staff': False}
-            else:
-                create_data = {'email': '%s@example.com' % self.cleaned_data['login'],
-                               'is_staff': False}
-            self.user = User.objects.create(**create_data)
-        return super(AdminPostForm, self).save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     try:
+    #         self.user = User.objects.filter(**{username_field: self.cleaned_data['login']}).get()
+    #     except User.DoesNotExist:
+    #         if username_field != 'email':
+    #             create_data = {username_field: self.cleaned_data['login'],
+    #                            'email': '%s@example.com' % self.cleaned_data['login'],
+    #                            'is_staff': False}
+    #         else:
+    #             create_data = {'email': '%s@example.com' % self.cleaned_data['login'],
+    #                            'is_staff': False}
+    #         self.user = User.objects.create(**create_data)
+    #     return super(AdminPostForm, self).save(*args, **kwargs)
 
 
 try:
