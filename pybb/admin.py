@@ -61,7 +61,7 @@ class TopicAdmin(admin.ModelAdmin):
     search_fields = ['name']
     fieldsets = (
         (None, {
-                'fields': ('forum', 'name', 'user', ('created', 'updated'), 'poll_type',)
+                'fields': ('forum', 'name', 'user', ('created', 'updated'), 'poll_type', 'sort_order')
                 }
          ),
         (_('Additional options'), {

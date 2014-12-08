@@ -123,7 +123,7 @@ class ForumView(RedirectToLoginMixin, PaginatorMixin, generic.ListView):
         if not perms.may_view_forum(self.request.user, self.forum):
             raise PermissionDenied
 
-        qs = self.forum.topics.order_by('-sticky', '-updated', '-id').select_related()
+        qs = self.forum.topics.order_by('sort_order').select_related()
         qs = perms.filter_topics(self.request.user, qs)
         return qs
 
