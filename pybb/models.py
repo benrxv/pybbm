@@ -297,7 +297,9 @@ class Post(RenderableItem):
         head_post_id = self.topic.posts.order_by('created', 'id')[0].id
 
         if self_id == head_post_id:
-            self.topic.delete()
+            # Don't delete the topic if it's a reward topic
+            if not hasattr(self, "project"):
+                self.topic.delete()
         else:
             super(Post, self).delete(*args, **kwargs)
             self.topic.update_counters()
