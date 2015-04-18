@@ -20,6 +20,18 @@ else:
     from django.core.mail import send_mass_mail
 
 
+""" Allow dynamic (alternate) email address selection from a user instance.
+Define PYBB_GET_EMAIL in settings which should point directly to a funtion
+that takes a user instance and returns an email address.
+"""
+if hasattr(settings, "PYBB_GET_EMAIL"):
+    path, mod = settings.PYBB_GET_EMAIL.rsplit('.', 1)
+    module = import_module(path)
+    get_email = getattr(mod, module)
+else:
+    get_email = None
+
+    
 def notify_topic_subscribers(post):
     topic = post.topic
     if post != topic.head:
@@ -39,15 +51,8 @@ def notify_topic_subscribers(post):
         mails = tuple()
         for user in topic.subscribers.exclude(pk=post.user.pk):
             try:
-                """ Allow dynamic (alternate) email address selection from a user instance.
-                Define PYBB_GET_EMAIL in settings which should point directly to a funtion
-                that takes a user instance and returns an email address.
-                """
-                if hasattr(settings, "PYBB_GET_EMAIL"):
-                    path, mod = settings.PYBB_GET_EMAIL.rsplit('.', 1)
-                    module = import_module(path)
-                    get_email_function = getattr(mod, module)
-                    email = get_email_function(user)
+                if get_email:
+                    email = get_email(user)
                 else:
                     email = user.email
                 validate_email(email)
@@ -56,7 +61,7 @@ def notify_topic_subscribers(post):
                 # Invalid email
                 continue
 
-            if user.email == '%s@example.com' % getattr(user, compat.get_username_field()):
+            if email == '%s@example.com' % getattr(user, compat.get_username_field()):
                 continue
 
             lang = util.get_pybb_profile(user).language or settings.LANGUAGE_CODE
@@ -67,7 +72,7 @@ def notify_topic_subscribers(post):
                                         'post': post,
                                         'delete_url': delete_url,
                                         'user': user})
-            mails += ((subject, message, from_email, [user.email]),)
+            mails += ((subject, message, from_email, [email]),)
 
         # Send mails
         send_mass_mail(mails, fail_silently=True)
