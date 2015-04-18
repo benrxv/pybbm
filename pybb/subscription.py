@@ -25,9 +25,9 @@ Define PYBB_GET_EMAIL in settings which should point directly to a funtion
 that takes a user instance and returns an email address.
 """
 if hasattr(settings, "PYBB_GET_EMAIL"):
-    path, mod = settings.PYBB_GET_EMAIL.rsplit('.', 1)
+    path, mod_name = settings.PYBB_GET_EMAIL.rsplit('.', 1)
     module = import_module(path)
-    get_email = getattr(mod, module)
+    get_email = getattr(module, mod_name)
 else:
     get_email = None
 
