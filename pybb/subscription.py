@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import unicode_literals
+from importlib import import_module
 from django.conf import settings
 from django.core.urlresolvers import reverse
 from django.core.validators import validate_email
@@ -38,7 +39,19 @@ def notify_topic_subscribers(post):
         mails = tuple()
         for user in topic.subscribers.exclude(pk=post.user.pk):
             try:
-                validate_email(user.email)
+                """ Allow dynamic (alternate) email address selection from a user instance.
+                Define PYBB_GET_EMAIL in settings which should point directly to a funtion
+                that takes a user instance and returns an email address.
+                """
+                if hasattr(settings, "PYBB_GET_EMAIL"):
+                    path, mod = settings.PYBB_GET_EMAIL.rsplit('.', 1)
+                    module = import_module(path)
+                    get_email_function = getattr(mod, module)
+                    email = get_email_function(user)
+                else:
+                    email = user.email
+                validate_email(email)
+                
             except:
                 # Invalid email
                 continue
